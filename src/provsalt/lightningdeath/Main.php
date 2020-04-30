@@ -9,6 +9,7 @@ use pocketmine\network\mcpe\protocol\AddActorPacket;
 use pocketmine\network\mcpe\protocol\PlaySoundPacket;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
+use BlockHorizons\Fireworks\entity;
 use pocketmine\math\Vector3;
 use pocketmine\utils\Config;
 use JackMD\UpdateNotifier\UpdateNotifier;
@@ -30,7 +31,23 @@ class Main extends PluginBase implements Listener {
         if ($event->getPlayer()->hasPermission("lightningdeath.bypass")){
             return true;
         }
-        $this->Lightning($event->getPlayer());
+        // Create the type of firework item to be launched
+/** @var Fireworks $fw */
+$fw = ItemFactory::get(Item::FIREWORKS);
+$fw->addExplosion(Fireworks::TYPE_CREEPER_HEAD, Fireworks::COLOR_GREEN, "", false, false);
+$fw->setFlightDuration(2);
+
+// Use whatever level you'd like here. Must be loaded
+$level = Server::getInstance()->getDefaultLevel();
+// Choose some coordinates
+$vector3 = $level->getSpawnLocation()->add(0.5, 1, 0.5);
+// Create the NBT data
+$nbt = FireworksRocket::createBaseNBT($vector3, new Vector3(0.001, 0.05, 0.001), lcg_value() * 360, 90);
+// Construct and spawn
+$entity = FireworksRocket::createEntity("FireworksRocket", $level, $nbt, $fw);
+if ($entity instanceof FireworksRocket) {
+    $entity->spawnToAll();
+}
         return true;
     }
     public function Lightning(Player $player) :void {
